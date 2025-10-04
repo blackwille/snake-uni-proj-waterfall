@@ -25,12 +25,13 @@ def main():
             for j in range(GRID_SIZE):
                 dpg.delete_item(f"square_{i}_{j}")
                 dpg.draw_rectangle(squares[i][j][0], squares[i][j][1], tag=f"square_{i}_{j}", parent="drawlist", fill=(255, 0, 0))
+        
+        fps = 60
+        frame_time = 1 / fps
+        time.sleep(frame_time)
             
         dpg.render_dearpygui_frame()
         
-        fps = 60
-        frame_time = 1 / 60
-        time.sleep(frame_time)
     
     dpg.destroy_context()
 
