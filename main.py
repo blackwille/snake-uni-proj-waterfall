@@ -8,7 +8,7 @@ def main():
     dpg.setup_dearpygui()
     dpg.show_viewport()
 
-    dpg.add_window(label="tutorial", width=550, height=550, tag="main_window")
+    dpg.add_window(label="tutorial", width=500, height=500, tag="main_window")
     dpg.set_primary_window(window="main_window", value=True)
     
     while dpg.is_dearpygui_running():
@@ -31,8 +31,8 @@ def main():
         time.sleep(frame_time)
             
         dpg.render_dearpygui_frame()
+        # mr?
         
-    
     dpg.destroy_context()
 
 if __name__ == "__main__":
