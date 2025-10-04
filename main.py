@@ -27,7 +27,10 @@ def main():
                 dpg.draw_rectangle(squares[i][j][0], squares[i][j][1], tag=f"square_{i}_{j}", parent="drawlist", fill=(255, 0, 0))
             
         dpg.render_dearpygui_frame()
-        time.sleep(0.0166666)
+        
+        fps = 60
+        frame_time = 1 / 60
+        time.sleep(frame_time)
     
     dpg.destroy_context()
 
