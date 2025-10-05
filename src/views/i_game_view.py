@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from src.controllers.IGameController import IGameController
-from src.data_classes.GameState import GameState
+from controllers.i_game_controller import IGameController
+from data_classes.game_state import GameState
 
 
 class IGameView(ABC):

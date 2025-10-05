@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
-from data_classes.EnumEvent import Event
+from data_classes.events import Event
 
 MAP_SIZE = 30
 

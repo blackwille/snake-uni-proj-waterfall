@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from data_classes.EnumEvent import Event
+from data_classes.events import Event
 
 
 class IGameController(ABC):
