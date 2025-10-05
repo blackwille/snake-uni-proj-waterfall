@@ -19,4 +19,3 @@ class IGameView(ABC):
     @abstractmethod
     def update(self, state: "GameState"):
         pass
-    

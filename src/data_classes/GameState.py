@@ -17,4 +17,3 @@ class GameState:
     apple: Coord = field(default_factory=lambda: Coord(0, 0))
     map_size: Tuple[int, int] = (MAP_SIZE, MAP_SIZE)
     stage: Event = Event.START_MENU
-    

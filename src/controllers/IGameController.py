@@ -6,4 +6,3 @@ class IGameController(ABC):
     @abstractmethod
     def handle_event(self, event: "Event"):
         pass
-    

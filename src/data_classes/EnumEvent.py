@@ -10,4 +10,3 @@ class Event(Enum):
     START_MENU = 5
     RUNNING = 6
     GAME_OVER = 7
-    
