@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from src.data_classes.EnumControllerEvents import ControllerEvent
+from data_classes.EnumEvent import Event
 
 
 class IGameController(ABC):
     @abstractmethod
-    def handle_event(self, event: "ControllerEvent"):
+    def handle_event(self, event: "Event"):
         pass
+    

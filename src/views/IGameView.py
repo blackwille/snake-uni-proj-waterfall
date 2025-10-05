@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from src.controllers import IGameController
-from src.data_classes import GameState
+from src.controllers.IGameController import IGameController
+from src.data_classes.GameState import GameState
 
 
 class IGameView(ABC):
@@ -17,5 +17,6 @@ class IGameView(ABC):
         pass
 
     @abstractmethod
-    def set_controller(self, state: "GameState"):
+    def update(self, state: "GameState"):
         pass
+    
