@@ -31,7 +31,6 @@ def main():
         time.sleep(frame_time)
             
         dpg.render_dearpygui_frame()
-        # mr?
         
     dpg.destroy_context()
 
