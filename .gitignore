@@ -46,3 +46,6 @@ __pycache__
 
 # Draw.io backup
 .$*.bkp
+
+# VSCode
+.vscode
