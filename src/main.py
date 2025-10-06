@@ -13,21 +13,21 @@ def main():
     dpg.setup_dearpygui()
     dpg.show_viewport()
     dpg.set_primary_window(window="main_window", value=True)
-    
+
     squares = []
     while dpg.is_dearpygui_running():
         fps = 60
         frame_time = 1 / fps
         time.sleep(frame_time)
         dpg.render_dearpygui_frame()
-        
+
         window_width = dpg.get_item_width("main_window")
         window_height = dpg.get_item_height("main_window")
         dpg.configure_item("drawlist", width=window_width, height=window_height)
-        
+
         if window_width is None or window_height is None:
             continue
-        
+
         SQUARE_SIZE = 50
         GRID_SIZE = min(window_width // SQUARE_SIZE, window_height // SQUARE_SIZE)
 
