@@ -228,7 +228,7 @@ class GameView(IGameView):
         drawlist_w = self.__current_state.map_size[0] * CELL_SIZE
         drawlist_h = self.__current_state.map_size[1] * CELL_SIZE
         dpg.configure_item(self.__drawlist_tag, width=drawlist_w, height=drawlist_h)
-        dpg.delete_item(self.__drawlist_tag, children_only=True)
+        # dpg.delete_item(self.__drawlist_tag, children_only=True)
 
         for x in range(self.__current_state.map_size[0]):
             for y in range(self.__current_state.map_size[1]):
