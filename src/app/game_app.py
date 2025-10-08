@@ -4,7 +4,7 @@ from controllers.game_controller import GameController
 import time
 
 
-class SnakeApp:
+class GameApp:
     def __init__(self, fps: int, tps: int) -> None:
         self.__model = GameModel()
         self.__controller = GameController(self.__model, tps)

@@ -1,8 +1,8 @@
-from app.snake_app import SnakeApp
+from app.game_app import GameApp
 
 
 def main():
-    snake_app = SnakeApp(fps=60, tps=10)
+    snake_app = GameApp(fps=60, tps=10)
     snake_app.run()
     snake_app.destroy()
 
