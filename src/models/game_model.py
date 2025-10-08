@@ -1,46 +1,49 @@
 from typing import List
-from data_classes.game_state import GameState, Coord, DEFAULT_MAP_SIZE
-from data_classes.events import Event
+from data.game_state import GameState, Coord, DEFAULT_MAP_SIZE
+from data.stages import Stage
+from data.directions import Direction
 from views.i_game_view import IGameView
-import random
+from random import randint
 
 
 class GameModel:
-    def __init__(self):
-        self.__snake_chains: List[Coord] = [Coord(DEFAULT_MAP_SIZE // 2, DEFAULT_MAP_SIZE // 2)]
-        self.__direction: Event = Event.MOVE_RIGHT
+    def __init__(self) -> None:
+        self.__snake_chains: List[Coord] = [
+            Coord(DEFAULT_MAP_SIZE // 2, DEFAULT_MAP_SIZE // 2)
+        ]
+        self.__direction: Direction = Direction.UP
         self.__map_size = {"width": DEFAULT_MAP_SIZE, "height": DEFAULT_MAP_SIZE}
         self.__apple: Coord = self.generate_apple()
-        self.__stage: Event = Event.START_MENU
+        self.__stage: Stage = Stage.START_MENU
         self.__consumers: List[IGameView] = []
 
     def add_consumer(self, game_view: IGameView):
         self.__consumers.append(game_view)
 
-    def set_direction(self, direction: Event):
+    def set_direction(self, direction: Direction):
         opposite_directions = {
-            Event.MOVE_UP: Event.MOVE_DOWN,
-            Event.MOVE_DOWN: Event.MOVE_UP,
-            Event.MOVE_LEFT: Event.MOVE_RIGHT,
-            Event.MOVE_RIGHT: Event.MOVE_LEFT,
+            Direction.UP: Direction.DOWN,
+            Direction.DOWN: Direction.UP,
+            Direction.LEFT: Direction.RIGHT,
+            Direction.RIGHT: Direction.LEFT,
         }
 
         if direction != opposite_directions.get(self.__direction):
             self.__direction = direction
 
     def go_straight(self):
-        if self.__stage != Event.RUNNING:
+        if self.__stage != Stage.GAME:
             return
 
         head = self.__snake_chains[0]
 
-        if self.__direction == Event.MOVE_UP:
+        if self.__direction == Direction.UP:
             new_head = Coord(head.x, head.y - 1)
-        elif self.__direction == Event.MOVE_DOWN:
+        elif self.__direction == Direction.DOWN:
             new_head = Coord(head.x, head.y + 1)
-        elif self.__direction == Event.MOVE_LEFT:
+        elif self.__direction == Direction.LEFT:
             new_head = Coord(head.x - 1, head.y)
-        elif self.__direction == Event.MOVE_RIGHT:
+        elif self.__direction == Direction.RIGHT:
             new_head = Coord(head.x + 1, head.y)
         else:
             return
@@ -51,12 +54,12 @@ class GameModel:
             or new_head.y < 0
             or new_head.y >= self.__map_size["height"]
         ):
-            self.__stage = Event.GAME_OVER
+            self.__stage = Stage.FAIL
             self.update_consumers()
             return
 
         if new_head in self.__snake_chains:
-            self.__stage = Event.GAME_OVER
+            self.__stage = Stage.FAIL
             self.update_consumers()
             return
 
@@ -69,8 +72,12 @@ class GameModel:
 
         self.update_consumers()
 
-    def start(self):
-        self.__stage = Event.RUNNING
+    def set_stage(self, stage: Stage):
+        if stage == Stage.START_MENU:
+            self.__snake_chains: List[Coord] = [
+                Coord(DEFAULT_MAP_SIZE // 2, DEFAULT_MAP_SIZE // 2)
+            ]
+        self.__stage = stage
         self.update_consumers()
 
     def update_consumers(self):
@@ -84,10 +91,16 @@ class GameModel:
             consumer.update(game_state)
 
     def generate_apple(self) -> Coord:
-        while True:
-            apple = Coord(
-                random.randint(0, self.__map_size["width"] - 1),
-                random.randint(0, self.__map_size["height"] - 1),
-            )
-            if apple not in self.__snake_chains:
-                return apple
+        possible_coords = []
+        for i in range(self.__map_size["width"]):
+            for j in range(self.__map_size["height"]):
+                coord = Coord(x=i, y=j)
+                if coord not in self.__snake_chains:
+                    possible_coords.append(coord)
+
+        apple_coord = Coord(0, 0)
+        if len(possible_coords) > 0:
+            apple_index = randint(0, len(possible_coords))
+            apple_coord = possible_coords[apple_index]
+
+        return apple_coord
