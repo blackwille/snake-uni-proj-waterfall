@@ -11,17 +11,17 @@ class GameController(IGameController):
         self.__model = model
         self.__tick_period = 1 / tps
         self.__last_essential_event = Event.PASS
-        self.restart_timer()
+        self.__restart_timer()
 
-    def restart_timer(self) -> None:
+    def __restart_timer(self) -> None:
         self.__timer_tick = threading.Timer(
-            interval=self.__tick_period, function=self.next_tick
+            interval=self.__tick_period, function=self.__next_tick
         )
         self.__timer_tick.daemon = True
         self.__timer_tick.start()
 
-    def next_tick(self) -> None:
-        self.restart_timer()
+    def __next_tick(self) -> None:
+        self.__restart_timer()
 
         is_up = self.__last_essential_event == Event.MOVE_UP
         if is_up:
