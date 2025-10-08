@@ -5,11 +5,11 @@ from data.game_state import GameState
 
 class IGameView(ABC):
     @abstractmethod
-    def watch_events(self):
+    def watch_events(self) -> None:
         pass
 
     @abstractmethod
-    def set_controller(self, controller: IGameController):
+    def set_controller(self, controller: IGameController) -> None:
         pass
 
     @abstractmethod
@@ -17,5 +17,5 @@ class IGameView(ABC):
         pass
 
     @abstractmethod
-    def update(self, state: GameState):
+    def update(self, state: GameState) -> None:
         pass

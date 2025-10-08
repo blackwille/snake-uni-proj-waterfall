@@ -7,35 +7,41 @@ import threading
 
 
 class GameController(IGameController):
-    def __init__(self, model: GameModel, tps: int):
+    def __init__(self, model: GameModel, tps: int) -> None:
         self.__model = model
         self.__tick_period = 1 / tps
         self.__last_essential_event = Event.PASS
-        self.__is_running = True
         self.restart_timer()
 
-    def restart_timer(self):
+    def restart_timer(self) -> None:
         self.__timer_tick = threading.Timer(
             interval=self.__tick_period, function=self.next_tick
         )
         self.__timer_tick.daemon = True
         self.__timer_tick.start()
 
-    def next_tick(self):
+    def next_tick(self) -> None:
         self.restart_timer()
 
-        if self.__last_essential_event == Event.MOVE_UP:
+        is_up = self.__last_essential_event == Event.MOVE_UP
+        if is_up:
             self.__model.set_direction(Direction.UP)
-        if self.__last_essential_event == Event.MOVE_DOWN:
+        is_down = self.__last_essential_event == Event.MOVE_DOWN
+        if is_down:
             self.__model.set_direction(Direction.DOWN)
-        if self.__last_essential_event == Event.MOVE_LEFT:
+        is_left = self.__last_essential_event == Event.MOVE_LEFT
+        if is_left:
             self.__model.set_direction(Direction.LEFT)
-        if self.__last_essential_event == Event.MOVE_RIGHT:
+        is_right = self.__last_essential_event == Event.MOVE_RIGHT
+        if is_right:
             self.__model.set_direction(Direction.RIGHT)
+
+        is_pass = self.__last_essential_event == Event.PASS
+        if is_up or is_down or is_left or is_right or is_pass:
+            self.__model.go_straight()
 
         if self.__last_essential_event == Event.PAUSE:
             return
-
         if self.__last_essential_event == Event.TO_GAME:
             self.__model.set_stage(Stage.GAME)
             self.__last_essential_event = Event.PAUSE
@@ -43,11 +49,10 @@ class GameController(IGameController):
         if self.__last_essential_event == Event.TO_START_MENU:
             self.__model.set_stage(Stage.START_MENU)
 
-        self.__model.go_straight()
         # set to default after processing
         self.__last_essential_event = Event.PASS
 
-    def handle_event(self, event: Event):
+    def handle_event(self, event: Event) -> None:
         if event == Event.EVENTS_NUM:
             print("ERROR (GameController): wrong event")
             return

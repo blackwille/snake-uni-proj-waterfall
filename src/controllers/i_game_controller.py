@@ -4,5 +4,5 @@ from data.events import Event
 
 class IGameController(ABC):
     @abstractmethod
-    def handle_event(self, event: Event):
+    def handle_event(self, event: Event) -> None:
         pass

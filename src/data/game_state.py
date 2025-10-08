@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from data.stages import Stage
 from data.coord import Coord
 
-DEFAULT_MAP_SIZE = 30
+DEFAULT_MAP_SIZE = 31
 
 
 @dataclass

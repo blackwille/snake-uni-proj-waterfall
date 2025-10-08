@@ -33,7 +33,6 @@ class GameView(IGameView):
 
         self.__main_window_tag = "main_window"
         with dpg.window(
-            label="Snake Game",
             tag=self.__main_window_tag,
         ):
             with dpg.font_registry():
@@ -48,12 +47,14 @@ class GameView(IGameView):
 
             self.__start_menu_label_tag = dpg.add_text(default_value="SNAKE GAME")
             dpg.bind_item_font(self.__start_menu_label_tag, large_font)
+
             self.__start_menu_button_start_tag = dpg.add_button(label="START")
 
             self.__game_score_label_tag = dpg.add_text(
                 default_value=f"SCORE: {len(self.__current_state.snake)}"
             )
             dpg.bind_item_font(self.__game_score_label_tag, mini_font)
+
             self.__drawlist_container_tag = dpg.add_group()
             self.__drawlist_tag = dpg.add_drawlist(
                 width=-1, height=-1, parent=self.__drawlist_container_tag
@@ -61,18 +62,19 @@ class GameView(IGameView):
 
             self.__fail_label_tag = dpg.add_text(default_value="GAME OVER")
             dpg.bind_item_font(self.__fail_label_tag, large_font)
+
             self.__fail_button_restart_tag = dpg.add_button(label="PLAY AGAIN")
 
-        dpg.create_viewport()
+        dpg.create_viewport(title="Snake Game")
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.set_primary_window(window=self.__main_window_tag, value=True)
 
     def destroy(self) -> None:
-        GameView.__instance = None
         dpg.destroy_context()
+        GameView.__instance = None
 
-    def watch_events(self):
+    def watch_events(self) -> None:
         if self.__controller is None:
             return
 
@@ -94,7 +96,7 @@ class GameView(IGameView):
 
         self.__controller.handle_event(event)
 
-    def set_controller(self, controller: IGameController):
+    def set_controller(self, controller: IGameController) -> None:
         self.__controller = controller
 
     def show(self) -> bool:
@@ -108,13 +110,12 @@ class GameView(IGameView):
         if self.__current_state.stage == Stage.FAIL:
             self.__set_fail_page()
 
-        self.__lock.acquire()
-        dpg.render_dearpygui_frame()
-        self.__lock.release()
+        with self.__lock:
+            dpg.render_dearpygui_frame()
 
         return True
 
-    def update(self, state: GameState):
+    def update(self, state: GameState) -> None:
         self.__current_state = state
         self.__update_game_page_by_state()
 
@@ -167,20 +168,20 @@ class GameView(IGameView):
             return
         dpg.configure_item(game_score, pos=(win_w // 2 - game_score_rect[0] // 2, 0))
 
+        PADDING = MINI_FONT_SIZE // 4
         drawlist_container = self.__drawlist_container_tag
         drawlist_rect = dpg.get_item_rect_size(drawlist_container)
         if drawlist_rect is None:
             return
-        PADDING = MINI_FONT_SIZE // 4
-        drawlist_x = win_w // 2 - drawlist_rect[0] // 2
-        drawlist_y = win_h // 2 - drawlist_rect[1] // 2
-        if drawlist_y < game_score_rect[1] + PADDING:
-            drawlist_y = game_score_rect[1] + PADDING
+        drawlist_container_x = win_w // 2 - drawlist_rect[0] // 2
+        drawlist_container_y = win_h // 2 - drawlist_rect[1] // 2
+        if drawlist_container_y < game_score_rect[1] + PADDING:
+            drawlist_container_y = game_score_rect[1] + PADDING
         dpg.configure_item(
             drawlist_container,
             pos=(
-                drawlist_x,
-                drawlist_y,
+                drawlist_container_x,
+                drawlist_container_y,
             ),
         )
 
@@ -191,12 +192,12 @@ class GameView(IGameView):
         dpg.show_item(self.__fail_label_tag)
         dpg.show_item(self.__fail_button_restart_tag)
 
-        PADDING = LARGE_FONT_SIZE // 2
         win_w = dpg.get_item_width(self.__main_window_tag)
         win_h = dpg.get_item_height(self.__main_window_tag)
         if win_w is None or win_h is None:
             return
 
+        PADDING = LARGE_FONT_SIZE // 2
         label = self.__fail_label_tag
         label_rect = dpg.get_item_rect_size(label)
         if label_rect is None:
@@ -227,6 +228,9 @@ class GameView(IGameView):
         )
 
     def __update_game_page_by_state(self) -> None:
+        if self.__current_state.stage == Stage.FAIL:
+            return
+
         dpg.configure_item(
             self.__game_score_label_tag,
             default_value=f"SCORE: {len(self.__current_state.snake)}",
@@ -238,7 +242,6 @@ class GameView(IGameView):
         for x in range(self.__current_state.map_size[0]):
             for y in range(self.__current_state.map_size[1]):
                 if dpg.does_item_exist(f"map_cell_{x}_{y}"):
-                    dpg.configure_item(item=f"map_cell_{x}_{y}", fill=(255, 255, 255))
                     continue
                 left_up_corner = (CELL_SIZE * x, CELL_SIZE * y)
                 right_down_corner = (
@@ -269,10 +272,8 @@ class GameView(IGameView):
                 dpg.draw_rectangle(
                     left_up_corner,
                     right_down_corner,
-                    tag=f"snake_{x}_{y}",
                     fill=(0, 0, 0),
                     color=(100, 100, 100),
-                    thickness=1,
                 )
             x = self.__current_state.apple.x
             y = self.__current_state.apple.y
@@ -284,8 +285,6 @@ class GameView(IGameView):
             dpg.draw_rectangle(
                 left_up_corner,
                 right_down_corner,
-                tag="apple",
                 fill=(255, 0, 0),
                 color=(100, 100, 100),
-                thickness=1,
             )

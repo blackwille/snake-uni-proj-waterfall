@@ -9,7 +9,7 @@ class Event(Enum):
     MOVE_RIGHT = 4
 
     PAUSE = 5
-
     TO_START_MENU = 6
     TO_GAME = 7
+
     EVENTS_NUM = 8

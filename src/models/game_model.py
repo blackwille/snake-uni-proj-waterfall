@@ -13,16 +13,16 @@ class GameModel:
             Coord(DEFAULT_MAP_SIZE // 2, DEFAULT_MAP_SIZE // 2)
         ]
         self.__lock: threading.Lock = lock
-        self.__direction: Direction = Direction.UP
+        self.__direction: Direction | None = None
         self.__map_size = {"width": DEFAULT_MAP_SIZE, "height": DEFAULT_MAP_SIZE}
         self.__apple: Coord = self.generate_apple()
         self.__stage: Stage = Stage.START_MENU
         self.__consumers: List[IGameView] = []
 
-    def add_consumer(self, game_view: IGameView):
+    def add_consumer(self, game_view: IGameView) -> None:
         self.__consumers.append(game_view)
 
-    def set_direction(self, direction: Direction):
+    def set_direction(self, direction: Direction) -> None:
         opposite_directions = {
             Direction.UP: Direction.DOWN,
             Direction.DOWN: Direction.UP,
@@ -30,8 +30,11 @@ class GameModel:
             Direction.RIGHT: Direction.LEFT,
         }
 
-        if direction != opposite_directions.get(self.__direction):
-            self.__direction = direction
+        if self.__direction is not None:
+            if direction == opposite_directions.get(self.__direction):
+                return
+
+        self.__direction = direction
 
     def go_straight(self):
         if self.__stage != Stage.GAME:
@@ -61,37 +64,39 @@ class GameModel:
             return
 
         self.__snake_chains.insert(0, new_head)
-        if new_head.x == self.__apple.x and new_head.y == self.__apple.y:
+        if new_head == self.__apple:
             self.__apple = self.generate_apple()
         else:
             self.__snake_chains.pop()
 
-        if new_head in self.__snake_chains[1::]:
-            self.__stage = Stage.FAIL
-            self.update_consumers()
-            return
+        for chain in self.__snake_chains[1::]:
+            if chain == new_head:
+                self.__stage = Stage.FAIL
+                self.update_consumers()
+                return
 
         self.update_consumers()
 
-    def set_stage(self, stage: Stage):
+    def set_stage(self, stage: Stage) -> None:
         if stage == Stage.START_MENU:
             self.__snake_chains: List[Coord] = [
                 Coord(DEFAULT_MAP_SIZE // 2, DEFAULT_MAP_SIZE // 2)
             ]
+            self.__direction = None
+            self.__apple = self.generate_apple()
         self.__stage = stage
         self.update_consumers()
 
-    def update_consumers(self):
+    def update_consumers(self) -> None:
         game_state = GameState(
             snake=self.__snake_chains.copy(),
-            apple=self.__apple,
+            apple=Coord(self.__apple.x, self.__apple.y),
             map_size=(self.__map_size["width"], self.__map_size["height"]),
             stage=self.__stage,
         )
         for consumer in self.__consumers:
-            self.__lock.acquire()
-            consumer.update(game_state)
-            self.__lock.release()
+            with self.__lock:
+                consumer.update(game_state)
 
     def generate_apple(self) -> Coord:
         possible_coords = []
