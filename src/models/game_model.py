@@ -1,23 +1,28 @@
-from typing import List
-from data.game_state import GameState, Coord, DEFAULT_MAP_SIZE
+from data.game_state import GameState, Coord
 from data.stages import Stage
 from data.directions import Direction
 from views.i_game_view import IGameView
+from configs.game_config import GameConfig
 from random import randint
 import threading
 
 
 class GameModel:
     def __init__(self, lock: threading.Lock) -> None:
-        self.__snake_chains: List[Coord] = [
-            Coord(DEFAULT_MAP_SIZE // 2, DEFAULT_MAP_SIZE // 2)
+        game_config = GameConfig()
+
+        self.__map_size = {
+            "width": game_config.map_size[0],
+            "height": game_config.map_size[1],
+        }
+        self.__snake_chains: list[Coord] = [
+            Coord(self.__map_size["width"] // 2, self.__map_size["height"] // 2)
         ]
         self.__lock: threading.Lock = lock
         self.__direction: Direction | None = None
-        self.__map_size = {"width": DEFAULT_MAP_SIZE, "height": DEFAULT_MAP_SIZE}
         self.__apple: Coord = self.generate_apple()
         self.__stage: Stage = Stage.START_MENU
-        self.__consumers: List[IGameView] = []
+        self.__consumers: list[IGameView] = []
 
     def add_consumer(self, game_view: IGameView) -> None:
         self.__consumers.append(game_view)
@@ -79,8 +84,8 @@ class GameModel:
 
     def set_stage(self, stage: Stage) -> None:
         if stage == Stage.START_MENU:
-            self.__snake_chains: List[Coord] = [
-                Coord(DEFAULT_MAP_SIZE // 2, DEFAULT_MAP_SIZE // 2)
+            self.__snake_chains: list[Coord] = [
+                Coord(self.__map_size["width"] // 2, self.__map_size["height"] // 2)
             ]
             self.__direction = None
             self.__apple = self.generate_apple()

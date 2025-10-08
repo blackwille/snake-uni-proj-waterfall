@@ -1,0 +1,12 @@
+{
+    "cell_size": 20,
+    "map_size": {
+        "width": 31,
+        "height": 31
+    },
+    "large_font_size": 38,
+    "regular_font_size": 28,
+    "mini_font_size": 22,
+    "max_frames_per_second": 1000,
+    "max_ticks_per_second": 10
+}

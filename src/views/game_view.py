@@ -4,18 +4,15 @@ from data.game_state import GameState
 from data.events import Event
 from data.stages import Stage
 from dearpygui import dearpygui as dpg
+from configs.game_config import GameConfig
 import os
 import threading
-
-LARGE_FONT_SIZE = 38
-REGULAR_FONT_SIZE = 28
-MINI_FONT_SIZE = 22
-CELL_SIZE = 20
 
 
 class GameView(IGameView):
     __instance = None
 
+    # Singleton
     def __new__(cls, *args, **kwargs):
         if cls.__instance is not None:
             raise RuntimeError("Only one GameView can be created")
@@ -29,6 +26,12 @@ class GameView(IGameView):
         self.__current_state: GameState = GameState()
         self.__controller: IGameController | None = None
 
+        game_config = GameConfig()
+        self.__cell_size = game_config.cell_size
+        self.__regular_font_size = game_config.regular_font_size
+        self.__large_font_size = game_config.large_font_size
+        self.__mini_font_size = game_config.mini_font_size
+
         dpg.create_context()
 
         self.__main_window_tag = "main_window"
@@ -40,9 +43,9 @@ class GameView(IGameView):
                 font_path = os.path.abspath(
                     os.path.join(os.path.dirname(__file__), relative_font_path)
                 )
-                large_font = dpg.add_font(font_path, LARGE_FONT_SIZE)
-                regular_font = dpg.add_font(font_path, REGULAR_FONT_SIZE)
-                mini_font = dpg.add_font(font_path, MINI_FONT_SIZE)
+                large_font = dpg.add_font(font_path, self.__large_font_size)
+                regular_font = dpg.add_font(font_path, self.__regular_font_size)
+                mini_font = dpg.add_font(font_path, self.__mini_font_size)
             dpg.bind_font(regular_font)
 
             self.__start_menu_label_tag = dpg.add_text(default_value="SNAKE GAME")
@@ -140,7 +143,7 @@ class GameView(IGameView):
             label, pos=(win_w // 2 - label_rect[0] // 2, win_h // 2 - label_rect[1])
         )
 
-        PADDING = LARGE_FONT_SIZE // 2
+        PADDING = self.__large_font_size // 2
         button = self.__start_menu_button_start_tag
         button_rect = dpg.get_item_rect_size(button)
         if button_rect is None:
@@ -168,7 +171,7 @@ class GameView(IGameView):
             return
         dpg.configure_item(game_score, pos=(win_w // 2 - game_score_rect[0] // 2, 0))
 
-        PADDING = MINI_FONT_SIZE // 4
+        PADDING = self.__mini_font_size // 4
         drawlist_container = self.__drawlist_container_tag
         drawlist_rect = dpg.get_item_rect_size(drawlist_container)
         if drawlist_rect is None:
@@ -197,7 +200,7 @@ class GameView(IGameView):
         if win_w is None or win_h is None:
             return
 
-        PADDING = LARGE_FONT_SIZE // 2
+        PADDING = self.__large_font_size // 2
         label = self.__fail_label_tag
         label_rect = dpg.get_item_rect_size(label)
         if label_rect is None:
@@ -236,6 +239,7 @@ class GameView(IGameView):
             default_value=f"SCORE: {len(self.__current_state.snake)}",
         )
 
+        CELL_SIZE = self.__cell_size
         drawlist_w = self.__current_state.map_size[0] * CELL_SIZE
         drawlist_h = self.__current_state.map_size[1] * CELL_SIZE
         dpg.configure_item(self.__drawlist_tag, width=drawlist_w, height=drawlist_h)
