@@ -2,7 +2,7 @@ from app.game_app import GameApp
 
 
 def main():
-    snake_app = GameApp(fps=60, tps=10)
+    snake_app = GameApp(fps=1000, tps=15)
     snake_app.run()
     snake_app.destroy()
 

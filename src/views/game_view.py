@@ -5,6 +5,7 @@ from data.events import Event
 from data.stages import Stage
 from dearpygui import dearpygui as dpg
 import os
+import threading
 
 LARGE_FONT_SIZE = 38
 REGULAR_FONT_SIZE = 28
@@ -22,8 +23,9 @@ class GameView(IGameView):
         cls.__instance = instance
         return instance
 
-    def __init__(self) -> None:
+    def __init__(self, lock: threading.Lock) -> None:
         super().__init__()
+        self.__lock: threading.Lock = lock
         self.__current_state: GameState = GameState()
         self.__controller: IGameController | None = None
 
@@ -79,6 +81,8 @@ class GameView(IGameView):
             event = Event.TO_GAME
         if dpg.get_item_state(item=self.__fail_button_restart_tag)["clicked"]:
             event = Event.TO_START_MENU
+        if dpg.is_key_pressed(dpg.mvKey_Spacebar):
+            event = Event.PAUSE
         if dpg.is_key_down(dpg.mvKey_Up):
             event = Event.MOVE_UP
         if dpg.is_key_down(dpg.mvKey_Down):
@@ -104,7 +108,10 @@ class GameView(IGameView):
         if self.__current_state.stage == Stage.FAIL:
             self.__set_fail_page()
 
+        self.__lock.acquire()
         dpg.render_dearpygui_frame()
+        self.__lock.release()
+
         return True
 
     def update(self, state: GameState):
@@ -113,7 +120,7 @@ class GameView(IGameView):
 
     def __set_start_menu_page(self) -> None:
         dpg.hide_item(self.__game_score_label_tag)
-        dpg.hide_item(self.__drawlist_tag)
+        dpg.hide_item(self.__drawlist_container_tag)
         dpg.hide_item(self.__fail_label_tag)
         dpg.hide_item(self.__fail_button_restart_tag)
         dpg.show_item(self.__start_menu_label_tag)
@@ -147,7 +154,7 @@ class GameView(IGameView):
         dpg.hide_item(self.__fail_label_tag)
         dpg.hide_item(self.__fail_button_restart_tag)
         dpg.show_item(self.__game_score_label_tag)
-        dpg.show_item(self.__drawlist_tag)
+        dpg.show_item(self.__drawlist_container_tag)
 
         win_w = dpg.get_item_width(self.__main_window_tag)
         win_h = dpg.get_item_height(self.__main_window_tag)
@@ -178,9 +185,9 @@ class GameView(IGameView):
         )
 
     def __set_fail_page(self) -> None:
-        dpg.hide_item(self.__drawlist_tag)
         dpg.hide_item(self.__start_menu_label_tag)
         dpg.hide_item(self.__start_menu_button_start_tag)
+        dpg.hide_item(self.__drawlist_container_tag)
         dpg.show_item(self.__fail_label_tag)
         dpg.show_item(self.__fail_button_restart_tag)
 
@@ -228,12 +235,10 @@ class GameView(IGameView):
         drawlist_w = self.__current_state.map_size[0] * CELL_SIZE
         drawlist_h = self.__current_state.map_size[1] * CELL_SIZE
         dpg.configure_item(self.__drawlist_tag, width=drawlist_w, height=drawlist_h)
-        # dpg.delete_item(self.__drawlist_tag, children_only=True)
-
         for x in range(self.__current_state.map_size[0]):
             for y in range(self.__current_state.map_size[1]):
-                if dpg.does_item_exist(f"cell_{x}_{y}"):
-                    dpg.configure_item(item=f"cell_{x}_{y}", fill=(255, 255, 255))
+                if dpg.does_item_exist(f"map_cell_{x}_{y}"):
+                    dpg.configure_item(item=f"map_cell_{x}_{y}", fill=(255, 255, 255))
                     continue
                 left_up_corner = (CELL_SIZE * x, CELL_SIZE * y)
                 right_down_corner = (
@@ -243,18 +248,44 @@ class GameView(IGameView):
                 dpg.draw_rectangle(
                     left_up_corner,
                     right_down_corner,
-                    tag=f"cell_{x}_{y}",
+                    tag=f"map_cell_{x}_{y}",
                     parent=self.__drawlist_tag,
                     fill=(255, 255, 255),
                     color=(100, 100, 100),
                     thickness=1,
                 )
 
-        for coord in self.__current_state.snake:
-            x = coord.x
-            y = coord.y
-            dpg.configure_item(item=f"cell_{x}_{y}", fill=(0, 0, 0))
-
-        x = self.__current_state.apple.x
-        y = self.__current_state.apple.y
-        dpg.configure_item(item=f"cell_{x}_{y}", fill=(255, 0, 0))
+        LAYER_SNAKE_W_APPLE_TAG = "draw_layer_snake_apple"
+        dpg.delete_item(LAYER_SNAKE_W_APPLE_TAG)
+        with dpg.draw_layer(tag=LAYER_SNAKE_W_APPLE_TAG, parent=self.__drawlist_tag):
+            for coord in self.__current_state.snake:
+                x = coord.x
+                y = coord.y
+                left_up_corner = (CELL_SIZE * x, CELL_SIZE * y)
+                right_down_corner = (
+                    CELL_SIZE + CELL_SIZE * x,
+                    CELL_SIZE + CELL_SIZE * y,
+                )
+                dpg.draw_rectangle(
+                    left_up_corner,
+                    right_down_corner,
+                    tag=f"snake_{x}_{y}",
+                    fill=(0, 0, 0),
+                    color=(100, 100, 100),
+                    thickness=1,
+                )
+            x = self.__current_state.apple.x
+            y = self.__current_state.apple.y
+            left_up_corner = (CELL_SIZE * x, CELL_SIZE * y)
+            right_down_corner = (
+                CELL_SIZE + CELL_SIZE * x,
+                CELL_SIZE + CELL_SIZE * y,
+            )
+            dpg.draw_rectangle(
+                left_up_corner,
+                right_down_corner,
+                tag="apple",
+                fill=(255, 0, 0),
+                color=(100, 100, 100),
+                thickness=1,
+            )

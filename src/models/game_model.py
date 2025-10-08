@@ -4,13 +4,15 @@ from data.stages import Stage
 from data.directions import Direction
 from views.i_game_view import IGameView
 from random import randint
+import threading
 
 
 class GameModel:
-    def __init__(self) -> None:
+    def __init__(self, lock: threading.Lock) -> None:
         self.__snake_chains: List[Coord] = [
             Coord(DEFAULT_MAP_SIZE // 2, DEFAULT_MAP_SIZE // 2)
         ]
+        self.__lock: threading.Lock = lock
         self.__direction: Direction = Direction.UP
         self.__map_size = {"width": DEFAULT_MAP_SIZE, "height": DEFAULT_MAP_SIZE}
         self.__apple: Coord = self.generate_apple()
@@ -36,7 +38,7 @@ class GameModel:
             return
 
         head = self.__snake_chains[0]
-
+        new_head = Coord(-1, -1)
         if self.__direction == Direction.UP:
             new_head = Coord(head.x, head.y - 1)
         elif self.__direction == Direction.DOWN:
@@ -58,17 +60,16 @@ class GameModel:
             self.update_consumers()
             return
 
-        if new_head in self.__snake_chains:
-            self.__stage = Stage.FAIL
-            self.update_consumers()
-            return
-
         self.__snake_chains.insert(0, new_head)
-
         if new_head.x == self.__apple.x and new_head.y == self.__apple.y:
             self.__apple = self.generate_apple()
         else:
             self.__snake_chains.pop()
+
+        if new_head in self.__snake_chains[1::]:
+            self.__stage = Stage.FAIL
+            self.update_consumers()
+            return
 
         self.update_consumers()
 
@@ -88,7 +89,9 @@ class GameModel:
             stage=self.__stage,
         )
         for consumer in self.__consumers:
+            self.__lock.acquire()
             consumer.update(game_state)
+            self.__lock.release()
 
     def generate_apple(self) -> Coord:
         possible_coords = []
