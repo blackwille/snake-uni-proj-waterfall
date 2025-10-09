@@ -39,7 +39,12 @@ class GameView(IGameView):
             tag=self.__main_window_tag,
         ):
             with dpg.font_registry():
-                relative_font_path = "../../fonts/Roboto-Regular.ttf"
+                relative_font_path = os.path.join(
+                    os.pardir,
+                    os.pardir,
+                    "fonts",
+                    "Roboto-Regular.ttf",
+                )
                 font_path = os.path.abspath(
                     os.path.join(os.path.dirname(__file__), relative_font_path)
                 )
