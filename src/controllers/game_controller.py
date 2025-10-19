@@ -1,9 +1,11 @@
+import threading
+from time import sleep
+
 from controllers.i_game_controller import IGameController
-from models.game_model import GameModel
+from data.directions import Direction
 from data.events import Event
 from data.stages import Stage
-from data.directions import Direction
-import threading
+from models.game_model import GameModel
 
 
 class GameController(IGameController):
@@ -11,33 +13,30 @@ class GameController(IGameController):
         self.__model = model
         self.__tick_period = 1 / tps
         self.__last_essential_event = Event.PASS
-        self.__restart_timer()
+        self.__ticker_thread = threading.Thread(target=self.__tick, daemon=True)
+        self.__ticker_thread.start()
 
-    def __restart_timer(self) -> None:
-        self.__timer_tick = threading.Timer(
-            interval=self.__tick_period, function=self.__next_tick
-        )
-        self.__timer_tick.daemon = True
-        self.__timer_tick.start()
+    def __tick(self) -> None:
+        while True:
+            self.__next_tick()
+            sleep(self.__tick_period)
 
     def __next_tick(self) -> None:
-        self.__restart_timer()
+        event_to_direction: dict = {
+            Event.MOVE_UP: Direction.UP,
+            Event.MOVE_DOWN: Direction.DOWN,
+            Event.MOVE_LEFT: Direction.LEFT,
+            Event.MOVE_RIGHT: Direction.RIGHT,
+        }
 
-        is_up = self.__last_essential_event == Event.MOVE_UP
-        if is_up:
-            self.__model.set_direction(Direction.UP)
-        is_down = self.__last_essential_event == Event.MOVE_DOWN
-        if is_down:
-            self.__model.set_direction(Direction.DOWN)
-        is_left = self.__last_essential_event == Event.MOVE_LEFT
-        if is_left:
-            self.__model.set_direction(Direction.LEFT)
-        is_right = self.__last_essential_event == Event.MOVE_RIGHT
-        if is_right:
-            self.__model.set_direction(Direction.RIGHT)
+        is_event_have_direction = (
+            self.__last_essential_event in event_to_direction.keys()
+        )
+        if is_event_have_direction:
+            self.__model.set_direction(event_to_direction[self.__last_essential_event])
 
         is_pass = self.__last_essential_event == Event.PASS
-        if is_up or is_down or is_left or is_right or is_pass:
+        if is_event_have_direction or is_pass:
             self.__model.go_straight()
 
         if self.__last_essential_event == Event.PAUSE:
